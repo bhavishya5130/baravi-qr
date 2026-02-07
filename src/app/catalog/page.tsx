@@ -5,9 +5,10 @@ import Link from 'next/link';
 export default async function CatalogPage({ 
   searchParams 
 }: { 
-  searchParams: { firm: string } 
+  searchParams: Promise<{ firm?: string }> 
 }) {
-  const firmId = searchParams.firm;
+  // Await searchParams because they are now asynchronous in Next.js 15
+  const { firm: firmId } = await searchParams;
 
   // Security check: if no firm ID is provided, show an error
   if (!firmId) {
