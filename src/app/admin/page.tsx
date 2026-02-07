@@ -31,11 +31,10 @@ export default function AdminDashboard() {
   const [pUrl, setPUrl] = useState('');
 
   const [notification, setNotification] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  const [shopUrl, setShopUrl] = useState(''); // State for the shop URL
   const router = useRouter();
 
-  // Shop URL for QR and Copy Link
-  const shopUrl = user ? `${window.location.origin}/catalog?firm=${user.id}` : '';
-
+  // Handle Authentication and Data Fetching
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -48,6 +47,13 @@ export default function AdminDashboard() {
     };
     checkUser();
   }, [router]);
+
+  // Handle shopUrl generation only on the client side
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user) {
+      setShopUrl(`${window.location.origin}/catalog?firm=${user.id}`);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (notification) {
@@ -66,6 +72,7 @@ export default function AdminDashboard() {
   };
 
   const copyShopLink = () => {
+    if (!shopUrl) return;
     navigator.clipboard.writeText(shopUrl);
     setNotification({ msg: "Shop link copied!", type: 'success' });
   };
@@ -135,7 +142,7 @@ export default function AdminDashboard() {
   return (
     <main className="min-h-screen bg-[#f8fafc] flex font-sans overflow-hidden relative">
       
-      {/* 1. MOBILE OVERLAY */}
+      {/* MOBILE OVERLAY */}
       {isSidebarOpen && (
         <div 
           className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] lg:hidden"
@@ -143,7 +150,7 @@ export default function AdminDashboard() {
         />
       )}
 
-      {/* 2. RESPONSIVE SIDEBAR */}
+      {/* RESPONSIVE SIDEBAR */}
       <aside className={`
         fixed lg:static inset-y-0 left-0 z-[70]
         w-80 bg-white border-r border-slate-100 h-screen overflow-y-auto p-6 
@@ -164,7 +171,7 @@ export default function AdminDashboard() {
         {/* QR Section */}
         <div className="flex flex-col items-center mb-8">
             <div className="bg-slate-50 p-5 rounded-[2.5rem] border border-slate-100 shadow-inner mb-4">
-                {user && <QRCode id="MerchantQR" value={shopUrl} size={140} viewBox={`0 0 256 256`} />}
+                {shopUrl && <QRCode id="MerchantQR" value={shopUrl} size={140} viewBox={`0 0 256 256`} />}
             </div>
             <button onClick={downloadQR} className="text-[10px] font-bold text-blue-600 uppercase tracking-widest flex items-center gap-2 hover:bg-blue-50 px-3 py-1 rounded-full transition-all">
                 <Download size={12} /> Get QR Assets
@@ -200,10 +207,10 @@ export default function AdminDashboard() {
         </div>
       </aside>
 
-      {/* 3. MAIN CONTENT AREA */}
+      {/* MAIN CONTENT AREA */}
       <section className="flex-1 h-screen overflow-y-auto bg-[#f8fafc] relative">
         
-        {/* MOBILE TOP BAR (Hidden on PC) */}
+        {/* MOBILE TOP BAR */}
         <div className="lg:hidden bg-white border-b border-slate-100 p-4 flex items-center justify-between sticky top-0 z-50">
             <button onClick={() => setIsSidebarOpen(true)} className="p-2 bg-slate-50 rounded-xl text-slate-600 shadow-sm"><Menu size={24} /></button>
             <h2 className="font-black italic uppercase tracking-tighter text-slate-900">Merchant Hub</h2>
@@ -220,7 +227,6 @@ export default function AdminDashboard() {
         )}
 
         <div className="max-w-5xl mx-auto p-6 md:p-12">
-            {/* Header */}
             <div className="flex justify-between items-end mb-12">
                 <div>
                     <h2 className="text-4xl font-black italic uppercase tracking-tighter text-slate-900 leading-none">Management</h2>
